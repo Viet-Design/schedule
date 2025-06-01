@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch Học Tương Tác</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .controls {
+            background: #f8fafc;
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4f46e5, #7c3aed);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-secondary {
+            background: #64748b;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+            transform: translateY(-2px);
+        }
+
+        .current-month {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e293b;
+        }
+
+        .view-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .view-options label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .calendar {
+            padding: 20px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .day-header {
+            background: #334155;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .day-cell {
+            background: white;
+            min-height: 120px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .day-cell:hover {
+            background: #f1f5f9;
+            transform: scale(1.02);
+        }
+
+        .day-number {
+            font-weight: bold;
+            font-size: 14px;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+
+        .other-month {
+            color: #94a3b8;
+            background: #f8fafc;
+        }
+
+        .today {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 2px solid #f59e0b;
+        }
+
+        .has-events {
+            border-left: 4px solid #10b981;
+        }
+
+        .event {
+            background: linear-gradient(45deg, #10b981, #059669);
+            color: white;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-bottom: 2px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            word-wrap: break-word;
+        }
+
+        .event:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+        }
+
+        .event.homework {
+            background: linear-gradient(45deg, #ef4444, #dc2626);
+        }
+
+        .event.exam {
+            background: linear-gradient(45deg, #f59e0b, #d97706);
+        }
+
+        .event.project {
+            background: linear-gradient(45deg, #8b5cf6, #7c3aed);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal h3 {
+            color: #1e293b;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #4f46e5;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4f46e5;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .nav-buttons,
+            .view-options {
+                justify-content: center;
+            }
+
+            .calendar-grid {
+                font-size: 12px;
+            }
+
+            .day-cell {
+                min-height: 80px;
+                padding: 4px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Lịch Học Của Tôi</h1>
+            <p>Quản lý thời gian học tập hiệu quả</p>
+        </div>
+
+        <div class="controls">
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" onclick="previousMonth()">← Tháng trước</button>
+                <span class="current-month" id="currentMonth"></span>
+                <button class="btn btn-secondary" onclick="nextMonth()">Tháng sau →</button>
+                <button class="btn btn-primary" onclick="goToToday()">Hôm nay</button>
+            </div>
+
+            <div class="view-options">
+                <label>
+                    <input type="checkbox" id="showHomework" checked onchange="updateCalendar()">
+                    Bài tập
+                </label>
+                <label>
+                    <input type="checkbox" id="showExams" checked onchange="updateCalendar()">
+                    Kiểm tra
+                </label>
+                <label>
+                    <input type="checkbox" id="showProjects" checked onchange="updateCalendar()">
+                    Dự án
+                </label>
+                <label>
+                    <input type="checkbox" id="showDetails" checked onchange="updateCalendar()">
+                    Chi tiết
+                </label>
+            </div>
+        </div>
+
+        <div class="calendar">
+            <div class="calendar-grid" id="calendarGrid"></div>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(45deg, #10b981, #059669);"></div>
+                    <span>Học bài</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(45deg, #ef4444, #dc2626);"></div>
+                    <span>Bài tập</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(45deg, #f59e0b, #d97706);"></div>
+                    <span>Kiểm tra</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(45deg, #8b5cf6, #7c3aed);"></div>
+                    <span>Dự án</span>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalEvents">0</div>
+                    <div class="stat-label">Tổng sự kiện</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="thisWeekEvents">0</div>
+                    <div class="stat-label">Tuần này</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="upcomingDeadlines">0</div>
+                    <div class="stat-label">Deadline sắp tới</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal thêm sự kiện -->
+    <div class="modal" id="eventModal">
+        <div class="modal-content">
+            <h3>Thêm sự kiện học tập</h3>
+            <form id="eventForm">
+                <div class="form-group">
+                    <label>Tiêu đề:</label>
+                    <input type="text" id="eventTitle" required>
+                </div>
+                <div class="form-group">
+                    <label>Ngày:</label>
+                    <input type="date" id="eventDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Loại:</label>
+                    <select id="eventType" required>
+                        <option value="study">Học bài</option>
+                        <option value="homework">Bài tập</option>
+                        <option value="exam">Kiểm tra</option>
+                        <option value="project">Dự án</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Thời gian:</label>
+                    <input type="time" id="eventTime">
+                </div>
+                <div class="form-group">
+                    <label>Môn học:</label>
+                    <input type="text" id="eventSubject">
+                </div>
+                <div class="form-group">
+                    <label>Ghi chú:</label>
+                    <textarea id="eventNotes" rows="3"></textarea>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Thêm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentDate = new Date();
+        let events = {};
+
+        // Dữ liệu mẫu
+        const sampleEvents = {
+            '2025-06-05': [
+                { title: 'Kiểm tra Toán', type: 'exam', time: '08:00', subject: 'Toán học', notes: 'Chương 1-3' },
+                { title: 'Nộp bài tập Văn', type: 'homework', time: '16:00', subject: 'Ngữ văn', notes: 'Phân tích bài thơ' }
+            ],
+            '2025-06-10': [
+                { title: 'Thuyết trình nhóm', type: 'project', time: '14:00', subject: 'Lịch sử', notes: 'Thời kỳ phong kiến' }
+            ],
+            '2025-06-15': [
+                { title: 'Học bài Hóa', type: 'study', time: '19:00', subject: 'Hóa học', notes: 'Bài 5: Phản ứng hóa học' }
+            ]
+        };
+
+        // Khởi tạo dữ liệu
+        events = { ...sampleEvents };
+
+        const daysOfWeek = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+        const months = [
+            'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+            'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
+        ];
+
+        function updateCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            document.getElementById('currentMonth').textContent = `${months[month]} ${year}`;
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+            
+            const calendarGrid = document.getElementById('calendarGrid');
+            calendarGrid.innerHTML = '';
+            
+            // Header
+            daysOfWeek.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'day-header';
+                dayHeader.textContent = day;
+                calendarGrid.appendChild(dayHeader);
+            });
+            
+            // Days
+            const currentDateObj = new Date();
+            const showHomework = document.getElementById('showHomework').checked;
+            const showExams = document.getElementById('showExams').checked;
+            const showProjects = document.getElementById('showProjects').checked;
+            const showDetails = document.getElementById('showDetails').checked;
+            
+            for (let i = 0; i < 42; i++) {
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + i);
+                
+                const dayCell = document.createElement('div');
+                dayCell.className = 'day-cell';
+                
+                if (date.getMonth() !== month) {
+                    dayCell.classList.add('other-month');
+                }
+                
+                if (date.toDateString() === currentDateObj.toDateString()) {
+                    dayCell.classList.add('today');
+                }
+                
+                const dayNumber = document.createElement('div');
+                dayNumber.className = 'day-number';
+                dayNumber.textContent = date.getDate();
+                dayCell.appendChild(dayNumber);
+                
+                const dateKey = date.toISOString().split('T')[0];
+                if (events[dateKey]) {
+                    dayCell.classList.add('has-events');
+                    
+                    events[dateKey].forEach(event => {
+                        if ((event.type === 'homework' && !showHomework) ||
+                            (event.type === 'exam' && !showExams) ||
+                            (event.type === 'project' && !showProjects) ||
+                            (event.type === 'study' && !showHomework)) {
+                            return;
+                        }
+                        
+                        const eventDiv = document.createElement('div');
+                        eventDiv.className = `event ${event.type}`;
+                        
+                        let eventText = event.title;
+                        if (showDetails) {
+                            if (event.time) eventText += ` (${event.time})`;
+                            if (event.subject) eventText += ` - ${event.subject}`;
+                        }
+                        
+                        eventDiv.textContent = eventText;
+                        eventDiv.title = `${event.title}\nThời gian: ${event.time || 'Chưa xác định'}\nMôn: ${event.subject || 'Không xác định'}\nGhi chú: ${event.notes || 'Không có'}`;
+                        dayCell.appendChild(eventDiv);
+                    });
+                }
+                
+                dayCell.addEventListener('click', () => openEventModal(dateKey));
+                calendarGrid.appendChild(dayCell);
+            }
+            
+            updateStats();
+        }
+
+        function updateStats() {
+            let totalEvents = 0;
+            let thisWeekEvents = 0;
+            let upcomingDeadlines = 0;
+            
+            const today = new Date();
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay());
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            
+            Object.keys(events).forEach(dateKey => {
+                const eventDate = new Date(dateKey);
+                totalEvents += events[dateKey].length;
+                
+                if (eventDate >= startOfWeek && eventDate <= endOfWeek) {
+                    thisWeekEvents += events[dateKey].length;
+                }
+                
+                if (eventDate >= today && eventDate <= new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)) {
+                    upcomingDeadlines += events[dateKey].filter(e => e.type === 'exam' || e.type === 'homework').length;
+                }
+            });
+            
+            document.getElementById('totalEvents').textContent = totalEvents;
+            document.getElementById('thisWeekEvents').textContent = thisWeekEvents;
+            document.getElementById('upcomingDeadlines').textContent = upcomingDeadlines;
+        }
+
+        function previousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            updateCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            updateCalendar();
+        }
+
+        function goToToday() {
+            currentDate = new Date();
+            updateCalendar();
+        }
+
+        function openEventModal(dateKey) {
+            document.getElementById('eventDate').value = dateKey;
+            document.getElementById('eventModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('eventModal').style.display = 'none';
+            document.getElementById('eventForm').reset();
+        }
+
+        document.getElementById('eventForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('eventTitle').value;
+            const date = document.getElementById('eventDate').value;
+            const type = document.getElementById('eventType').value;
+            const time = document.getElementById('eventTime').value;
+            const subject = document.getElementById('eventSubject').value;
+            const notes = document.getElementById('eventNotes').value;
+            
+            if (!events[date]) {
+                events[date] = [];
+            }
+            
+            events[date].push({
+                title,
+                type,
+                time,
+                subject,
+                notes
+            });
+            
+            closeModal();
+            updateCalendar();
+        });
+
+        // Đóng modal khi click bên ngoài
+        document.getElementById('eventModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Khởi tạo calendar
+        updateCalendar();
+    </script>
+</body>
+</html>
